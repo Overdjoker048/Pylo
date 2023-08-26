@@ -5,30 +5,35 @@ from discord.ext import commands
 from link_classe import Link
 from client import User
 
-client = commands.Bot(command_prefix="!" , help_command=None)
+client = commands.Bot(command_prefix="!", help_command=None, intents=discord.Intents.all())
+
 
 @client.command()
 @commands.has_permissions(administrator=True)
 async def add_link(ctx, url):
-    if not ctx.message.author.bot:
+    if not ctx.author.bot:
         link = Link(guild=ctx.guild)
         link.add(url)
-        embed = discord.Embed(title="Validation", description="Le lien a bien été ajouté à la liste.", color=discord.Color.green())
+        embed = discord.Embed(title="Validation", description="Le lien a bien été ajouté à la liste.",
+                              color=discord.Color.green())
         await ctx.send(embed=embed)
+
 
 @client.command()
 @commands.has_permissions(administrator=True)
 async def remove_link(ctx, id: int):
-    if not ctx.message.author.bot:
+    if not ctx.author.bot:
         link = Link(guild=ctx.guild)
         link.remove(id)
-        embed = discord.Embed(title="Validation", description=f"Le lien possédent l'id {id} à bien été supprimé.", color=discord.Color.red())
+        embed = discord.Embed(title="Validation", description=f"Le lien possédent l'id {id} à bien été supprimé.",
+                              color=discord.Color.red())
         await ctx.send(embed=embed)
+
 
 @client.command()
 @commands.has_permissions(administrator=True)
 async def link_list(ctx):
-    if not ctx.message.author.bot:
+    if not ctx.author.bot:
         link = Link(guild=ctx.guild)
         nmb = 0
         url_list = ""
@@ -38,9 +43,10 @@ async def link_list(ctx):
         embed = discord.Embed(title="Liste des liens:", description=f"{url_list}", color=discord.Color.green())
         await ctx.send(embed=embed)
 
+
 @client.command()
 async def help(ctx):
-    if not ctx.message.author.bot:
+    if not ctx.author.bot:
         embed = discord.Embed(title='Mon prefix est "!".', description='''Liste des commandes:
 !help (Vous informe sur toutes les commandes de Pylo.)
 !clear (Permet de supprimer le nombre de message que vous voulez.)
@@ -55,59 +61,70 @@ async def help(ctx):
     ''', color=discord.Color.blue())
         await ctx.send(embed=embed)
 
+
 @client.event
 async def on_ready():
     await client.change_presence(activity=discord.Game(name="Pylo.gg"))
 
+
 @client.command()
 @commands.has_permissions(administrator=True)
 async def reset_xp(ctx, member: discord.Member):
-    if not ctx.message.author.bot:
-        user = User(user=ctx.member, guild=ctx.guild)
+    if not ctx.author.bot:
+        user = User(user=member, guild=ctx.guild)
         user.info['lvl'] = 0
         user.info['xp'] = 0
         user.info['xp_max'] = 500
         user.save()
-    await ctx.send(embed=discord.Embed(title="Validation", description=f"{member} a été reinitialiser.", color=discord.Color.red()))
+    await ctx.send(embed=discord.Embed(title="Validation", description=f"{member} a été reinitialiser.",
+                                       color=discord.Color.red()))
+
 
 @client.command()
 async def rank(ctx, member: discord.Member = None):
-    if not ctx.message.author.bot:
-        if member == None:
+    if not ctx.author.bot:
+        if member is None:
             member = ctx.author
         user = User(user=member, guild=ctx.guild)
-        embed = discord.Embed(title=f"{member} (Niveau {user.info['lvl']})", description=f"{user.info['xp']}/{user.info['xp_max']}xp", color=discord.Color.blue())
-        embed.set_author(name=str(member), icon_url=member.avatar_url)
+        embed = discord.Embed(title=f"{member} (Niveau {user.info['lvl']})",
+                              description=f"{user.info['xp']}/{user.info['xp_max']}xp", color=discord.Color.blue())
+        embed.set_author(name=str(member), icon_url=member.avatar)
         await ctx.send(embed=embed)
+
 
 @client.command()
 @commands.has_permissions(administrator=True)
-async def clear(ctx, nombre: int):
-    if not ctx.message.author.bot:
-        messages = await ctx.channel.history(limit=nombre + 1).flatten()
-        for message in messages:
-            await message.delete()
+async def clear(ctx, nmb: int):
+    if not ctx.author.bot:
+        await ctx.channel.purge(limit=nmb+1)
+
 
 @client.command()
 @commands.has_permissions(administrator=True)
 async def ban(ctx, member: discord.Member, *, reason=None):
-    if not ctx.message.author.bot:
+    if not ctx.author.bot:
+        await member.send("bonjour")
         await member.ban(reason=reason)
-        await ctx.send(embed=discord.Embed(title="Validation", description=f"Le membre {member} vien d'être bannis.\nRaison: {reason}", color=discord.Color.red()))
+        await ctx.send(embed=discord.Embed(title="Validation",
+                                           description=f"Le membre {member} vien d'être bannis.\nRaison: {reason}",
+                                           color=discord.Color.red()))
+
 
 @client.command()
 @commands.has_permissions(administrator=True)
 async def kick(ctx, member: discord.Member):
     if not ctx.message.author.bot:
         await ctx.guild.kick(member)
-        await ctx.send(embed=discord.Embed(title="Validation", description=f"Le membre {member} vien d'être expulser.", color=discord.Color.red()))
+        await ctx.send(embed=discord.Embed(title="Validation", description=f"Le membre {member} vien d'être expulser.",
+                                           color=discord.Color.red()))
+
 
 @client.event
 async def on_message(message):
     time.sleep(0.1)
     link = Link(guild=message.guild)
-    if 'discord.gg' in message.content or link.check(text=message.content):
-        message.delete()
+    if "discord.gg" in message.content or link.check(text=message.content):
+        await message.delete()
 
     if not message.author.bot:
         user = User(user=message.author, guild=message.guild)
@@ -125,4 +142,4 @@ async def on_message(message):
 
     await client.process_commands(message)
 
-client.run("TOKEN")
+client.run("MTE0NTA5MjM5NjA0NTA2MjIyOA.GQhmgC.aSx1lWO0zG5gJx4SR96dOPGAXNtnw04qTXoGsI")

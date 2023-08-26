@@ -3,7 +3,7 @@ import os
 
 class Link:
     def __init__(self, guild: discord.Guild) -> None:
-        self.guild_id = guild.id
+        self.guild_id = str(guild.id)
         try:
             if not os.path.exists("assets"):
                 os.mkdir("assets")
